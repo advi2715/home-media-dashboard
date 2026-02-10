@@ -1,27 +1,27 @@
 # Home Media Dashboard
 
-A lightweight dashboard for monitoring your home media stack (Plex, Qbittorrent, Sonarr, Radarr).
+A lightweight dashboard for monitoring your home media stack (Plex, Qbittorrent, Sonarr, Radarr, Overseerr).
 
 ## Installation
 
 ### Arch Linux
 1.  Download the universal package (`any`):
     ```bash
-    wget https://github.com/asdghsas35/home-media-dashboard/releases/download/v1.1.6/media-dashboard-1.1.6-1-any.pkg.tar.zst
+    wget https://github.com/asdghsas35/home-media-dashboard/releases/download/v1.1.10/media-dashboard-1.1.10-1-any.pkg.tar.zst
     ```
 2.  Install the package using `pacman`:
     ```bash
-    sudo pacman -U media-dashboard-1.1.6-1-any.pkg.tar.zst
+    sudo pacman -U media-dashboard-1.1.10-1-any.pkg.tar.zst
     ```
 
 ### Debian / Ubuntu (including Raspberry Pi)
 1.  Download the universal package (`all`):
     ```bash
-    wget https://github.com/asdghsas35/home-media-dashboard/releases/download/v1.1.6/media-dashboard_1.1.6_all.deb
+    wget https://github.com/asdghsas35/home-media-dashboard/releases/download/v1.1.10/media-dashboard_1.1.10_all.deb
     ```
 2.  Install the package using `apt` (this automatically handles dependencies):
     ```bash
-    sudo apt install ./media-dashboard_1.1.6_all.deb
+    sudo apt install ./media-dashboard_1.1.10_all.deb
     ```
     *Note: If you already ran `dpkg -i` and got errors, run `sudo apt-get install -f` to fix missing dependencies.*
 
@@ -61,6 +61,10 @@ The service runs as a user service and loads configuration from `~/.config/media
     # Radarr
     RADARR_URL=http://localhost:7878
     RADARR_API_KEY=your_radarr_api_key
+
+    # Overseerr
+    OVERSEERR_URL=http://localhost:5055
+    OVERSEERR_API_KEY=your_overseerr_api_key
     ```
 
 ## Starting the Service
