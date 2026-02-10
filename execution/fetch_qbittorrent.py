@@ -169,6 +169,8 @@ def delete_torrent(torrent_hash, delete_files=False):
     if not base_url:
         return {'error': 'Qbittorrent URL not configured'}
 
+    base_url = base_url.rstrip('/')
+
     # Setup Cookie Jar
     cj = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
@@ -179,7 +181,9 @@ def delete_torrent(torrent_hash, delete_files=False):
         if username and password:
             login_data = urllib.parse.urlencode({'username': username, 'password': password}).encode('utf-8')
             with opener.open(f"{base_url}/api/v2/auth/login", data=login_data, timeout=5) as login_resp:
-                pass # Check success?
+                login_text = login_resp.read().decode('utf-8')
+                if "Fails." in login_text:
+                    return {'error': 'Qbittorrent login failed'}
 
         # Delete torrent
         delete_url = f"{base_url}/api/v2/torrents/delete"
@@ -189,10 +193,11 @@ def delete_torrent(torrent_hash, delete_files=False):
         }).encode('utf-8')
         
         with opener.open(delete_url, data=post_data, timeout=5) as resp:
-            # 200 OK usually
             pass
         
         return {'success': True}
 
+    except urllib.error.HTTPError as e:
+        return {'error': f'Qbittorrent HTTP {e.code}: {e.reason}'}
     except Exception as e:
         return {'error': str(e)}
