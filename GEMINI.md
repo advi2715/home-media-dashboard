@@ -47,7 +47,8 @@ Errors are learning opportunities. When something breaks:
 4. Update directive to include new flow
 5. System is now stronger
 
-
+## Avoid stalls
+- **If you're testing something by running an executable or a process, continue to check its progress. If it stalls or hangs use your best judgement on how to proceed. Don't leave a process running while testing if it can't be completed.
 
 **Deliverables vs Intermediates:**
 - **Deliverables**: Google Sheets, Google Slides, or other cloud-based outputs that the user can access

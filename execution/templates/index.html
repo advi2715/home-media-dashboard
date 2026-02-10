@@ -103,6 +103,31 @@
 
             let html = '<div class="plex-shelf-container">';
 
+            // Active Sessions - Highlighted Section
+            if (data.active_sessions && data.active_sessions.length > 0) {
+                html += '<div class="shelf-section active-sessions"><h3>Now Playing</h3><div class="active-grid">';
+                data.active_sessions.forEach(session => {
+                    const thumb = session.thumb || '';
+                    const userThumb = session.user_thumb || ''; // Fallback to default icon in CSS if empty
+
+                    html += `
+                        <div class="active-item">
+                            <div class="active-thumb" style="background-image: url('${thumb}')">
+                                <div class="user-avatar" style="background-image: url('${userThumb}')" title="${session.user}"></div>
+                            </div>
+                            <div class="active-info">
+                                <div class="active-title" title="${session.title}">${session.title}</div>
+                                <div class="active-meta">
+                                    <span class="active-user">${session.user}</span>
+                                    <span class="playing-indicator">Playing</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+
             // Movies Shelf
             html += '<div class="shelf-section"><h3>Recently Added Movies</h3><div class="poster-grid">';
             if (data.movies && data.movies.length > 0) {
@@ -147,6 +172,15 @@
             container.innerHTML = html;
         }
 
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
         function renderQbit(data) {
             currentQbitData = data;
             const container = document.getElementById('qbit-content');
@@ -167,13 +201,37 @@
                             </div>
                         </div>`;
 
+            // Global Transfer Stats
+            if (data.transfer_info) {
+                html += `
+                <div class="transfer-stats">
+                    <div class="transfer-row">
+                        <span class="transfer-label">Down Speed:</span>
+                        <span class="transfer-value">${formatBytes(data.transfer_info.dl_info_speed)}/s</span>
+                    </div>
+                     <div class="transfer-row">
+                        <span class="transfer-label">Up Speed:</span>
+                        <span class="transfer-value">${formatBytes(data.transfer_info.up_info_speed)}/s</span>
+                    </div>
+                     <div class="transfer-row">
+                        <span class="transfer-label">Session DL:</span>
+                        <span class="transfer-value">${formatBytes(data.transfer_info.dl_info_data)}</span>
+                    </div>
+                     <div class="transfer-row">
+                        <span class="transfer-label">Session UL:</span>
+                        <span class="transfer-value">${formatBytes(data.transfer_info.up_info_data)}</span>
+                    </div>
+                </div>
+                `;
+            }
+
             if (data.active_downloads && data.active_downloads.length > 0) {
                 html += '<div class="section-title">Downloading</div><div class="download-list">';
                 data.active_downloads.forEach(dl => {
                     html += `
                         <div class="download-item">
                             <div class="download-name">${dl.name}</div>
-                            <div class="download-speed">${dl.speed}</div>
+                            <div class="download-speed">${formatBytes(dl.dlspeed)}/s</div>
                         </div>
                     `;
                 });

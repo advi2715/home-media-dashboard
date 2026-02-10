@@ -132,11 +132,28 @@ def fetch_qbittorrent_data():
         except Exception:
             pass
 
+        # 4. Get Global Transfer Info
+        # API: /api/v2/transfer/info
+        transfer_info = {}
+        try:
+            with opener.open(f"{base_url}/api/v2/transfer/info", timeout=5) as transfer_resp:
+                t_data = json.loads(transfer_resp.read().decode('utf-8'))
+                transfer_info = {
+                    'dl_info_data': t_data.get('dl_info_data', 0),
+                    'up_info_data': t_data.get('up_info_data', 0),
+                    'dl_info_speed': t_data.get('dl_info_speed', 0),
+                    'up_info_speed': t_data.get('up_info_speed', 0)
+                }
+        except Exception:
+             # If this fails, we just don't show the global stats, not critical enough to fail everything
+            pass
+
         return {
             'recent': recent_downloads,
             'active_downloads': [t for t in recent_downloads if t['state'] == 'Downloading'],
             'error_count': len(errored_torrents),
-            'errored_torrents': errored_torrents
+            'errored_torrents': errored_torrents,
+            'transfer_info': transfer_info
         }
 
     except Exception as e:
