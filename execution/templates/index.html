@@ -61,6 +61,17 @@
                     <div class="loading">Loading Radarr data...</div>
                 </div>
             </div>
+
+            <!-- Overseerr Section -->
+            <div class="card overseerr-card">
+                <div class="card-header">
+                    <h2><a href="{{ overseerr_url }}" target="_blank">Overseerr</a></h2>
+                    <span class="status-indicator online"></span>
+                </div>
+                <div class="card-content" id="overseerr-content">
+                    <div class="loading">Loading requests...</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -88,6 +99,7 @@
                     renderQbit(data.qbittorrent);
                     renderSonarr(data.sonarr);
                     renderRadarr(data.radarr);
+                    renderOverseerr(data.overseerr);
 
                     const now = new Date();
                     document.getElementById('last-updated').textContent = `Last updated: ${now.toLocaleTimeString()}`;
@@ -272,6 +284,45 @@
 
         function renderRadarr(data) {
             renderArr(data, 'radarr-content', 'Radarr');
+        }
+
+        function renderOverseerr(data) {
+            const container = document.getElementById('overseerr-content');
+            if (data.error) {
+                container.innerHTML = `<div class="error">${data.error}</div>`;
+                return;
+            }
+
+            let html = `<div class="stat-row">
+                            <div class="stat-item">
+                                <span class="stat-label">Pending</span>
+                                <span class="stat-value">${data.count || 0}</span>
+                            </div>
+                        </div>`;
+
+            html += '<div class="section-title">Pending Requests</div><div class="request-list">';
+            if (data.requests && data.requests.length > 0) {
+                data.requests.forEach(req => {
+                    const thumb = req.image || ''; // Placeholder if empty handled by CSS or generic
+                    // We can reuse a similar style to active sessions small items or create a new one
+                    html += `
+                        <div class="request-item">
+                            <div class="request-thumb" style="background-image: url('${thumb}')"></div>
+                            <div class="request-info">
+                                <div class="request-title" title="${req.title}">${req.title}</div>
+                                <div class="request-meta">
+                                    <span class="request-user">${req.user}</span>
+                                    <span class="request-date">${req.date}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div class="empty-state">No pending requests</div>';
+            }
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         function renderArr(data, elementId, appName) {

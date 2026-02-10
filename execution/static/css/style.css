@@ -660,3 +660,65 @@ h3:first-child {
         box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
     }
 }
+
+/* Overseerr Request List */
+.request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.request-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.request-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--card-border);
+}
+
+.request-thumb {
+    width: 40px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.request-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.request-title {
+    font-weight: 500;
+    font-size: 0.925rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.request-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    gap: 1rem;
+}
+
+.request-user {
+    color: var(--accent-color);
+}
