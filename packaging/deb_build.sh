@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 APP_NAME="media-dashboard"
-VERSION="1.1.9"
+VERSION="1.1.10"
 ARCH="amd64"
 BUILD_DIR="build/deb"
 DEB_NAME="${APP_NAME}_${VERSION}_${ARCH}.deb"

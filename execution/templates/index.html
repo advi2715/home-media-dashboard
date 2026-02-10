@@ -17,61 +17,62 @@
             <div id="last-updated">Updating...</div>
         </header>
 
-        <!-- Overseerr Section -->
-        <div class="card overseerr-card full-width">
-            <div class="card-header">
-                <h2><a href="{{ overseerr_url }}" target="_blank">Overseerr</a></h2>
-                <span class="status-indicator online"></span>
+        <div class="dashboard-grid">
+            <!-- Overseerr Section -->
+            <div class="card overseerr-card full-width">
+                <div class="card-header">
+                    <h2><a href="{{ overseerr_url }}" target="_blank">Overseerr</a></h2>
+                    <span class="status-indicator online"></span>
+                </div>
+                <div class="card-content" id="overseerr-content">
+                    <div class="loading">Loading requests...</div>
+                </div>
             </div>
-            <div class="card-content" id="overseerr-content">
-                <div class="loading">Loading requests...</div>
-            </div>
-        </div>
 
-        <!-- Plex Section - Full Width for Posters -->
-        <div class="card plex-card full-width">
-            <div class="card-header">
-                <h2><a href="{{ plex_url }}" target="_blank">Plex</a></h2>
-                <span class="status-indicator online"></span>
+            <!-- Plex Section - Full Width for Posters -->
+            <div class="card plex-card full-width">
+                <div class="card-header">
+                    <h2><a href="{{ plex_url }}" target="_blank">Plex</a></h2>
+                    <span class="status-indicator online"></span>
+                </div>
+                <div class="card-content" id="plex-content">
+                    <div class="loading">Loading Plex data...</div>
+                </div>
             </div>
-            <div class="card-content" id="plex-content">
-                <div class="loading">Loading Plex data...</div>
-            </div>
-        </div>
 
-        <!-- Qbittorrent Section -->
-        <div class="card qbit-card">
-            <div class="card-header">
-                <h2><a href="{{ qbittorrent_url }}" target="_blank">Qbittorrent</a></h2>
-                <span class="status-indicator online"></span>
+            <!-- Qbittorrent Section -->
+            <div class="card qbit-card">
+                <div class="card-header">
+                    <h2><a href="{{ qbittorrent_url }}" target="_blank">Qbittorrent</a></h2>
+                    <span class="status-indicator online"></span>
+                </div>
+                <div class="card-content" id="qbit-content">
+                    <div class="loading">Loading Qbittorrent data...</div>
+                </div>
             </div>
-            <div class="card-content" id="qbit-content">
-                <div class="loading">Loading Qbittorrent data...</div>
-            </div>
-        </div>
 
-        <!-- Sonarr Section -->
-        <div class="card sonarr-card">
-            <div class="card-header">
-                <h2><a href="{{ sonarr_url }}" target="_blank">Sonarr</a></h2>
-                <span class="status-indicator online"></span>
+            <!-- Sonarr Section -->
+            <div class="card sonarr-card">
+                <div class="card-header">
+                    <h2><a href="{{ sonarr_url }}" target="_blank">Sonarr</a></h2>
+                    <span class="status-indicator online"></span>
+                </div>
+                <div class="card-content" id="sonarr-content">
+                    <div class="loading">Loading Sonarr data...</div>
+                </div>
             </div>
-            <div class="card-content" id="sonarr-content">
-                <div class="loading">Loading Sonarr data...</div>
-            </div>
-        </div>
 
-        <!-- Radarr Section -->
-        <div class="card radarr-card">
-            <div class="card-header">
-                <h2><a href="{{ radarr_url }}" target="_blank">Radarr</a></h2>
-                <span class="status-indicator online"></span>
-            </div>
-            <div class="card-content" id="radarr-content">
-                <div class="loading">Loading Radarr data...</div>
+            <!-- Radarr Section -->
+            <div class="card radarr-card">
+                <div class="card-header">
+                    <h2><a href="{{ radarr_url }}" target="_blank">Radarr</a></h2>
+                    <span class="status-indicator online"></span>
+                </div>
+                <div class="card-content" id="radarr-content">
+                    <div class="loading">Loading Radarr data...</div>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- Error Modal -->
