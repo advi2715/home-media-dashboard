@@ -11,6 +11,8 @@ def fetch_plex_data():
     if not plex_url or not plex_token:
         return {'error': 'Plex not configured'}
 
+    plex_url = plex_url.rstrip('/')
+
     headers = {
         'Accept': 'application/json'
     }
@@ -64,10 +66,6 @@ def fetch_plex_data():
                 data = json.loads(response.read().decode('utf-8'))
             
             if 'MediaContainer' in data and data['MediaContainer'].get('size', 0) > 0:
-                # Get the first session for now (simplicity)
-                # Ideally we returns a list, but let's start with one prominent one or a list
-                # The prompt asked for "what is currently being played", implyng potentially multiple but singular phrasing too.
-                # Let's return a list of sessions.
                 sessions = []
                 metadata = data['MediaContainer'].get('Metadata', [])
                 for item in metadata:

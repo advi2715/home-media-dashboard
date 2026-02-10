@@ -13,6 +13,8 @@ def fetch_qbittorrent_data():
     if not base_url:
         return {'error': 'Qbittorrent URL not configured'}
 
+    base_url = base_url.rstrip('/')
+
     # Setup Cookie Jar for authentication
     cj = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))

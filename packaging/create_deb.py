@@ -33,7 +33,7 @@ def main():
         # 2. control.tar.gz
         print("Creating control.tar.gz...")
         control_tar_path = os.path.join(temp_dir, 'control.tar.gz')
-        with tarfile.open(control_tar_path, "w:gz") as tar:
+        with tarfile.open(control_tar_path, "w:gz", format=tarfile.GNU_FORMAT) as tar:
             for root, dirs, files in os.walk(debian_dir):
                 for file in files:
                     full_path = os.path.join(root, file)
@@ -58,7 +58,7 @@ def main():
         # 3. data.tar.gz
         print("Creating data.tar.gz...")
         data_tar_path = os.path.join(temp_dir, 'data.tar.gz')
-        with tarfile.open(data_tar_path, "w:gz") as tar:
+        with tarfile.open(data_tar_path, "w:gz", format=tarfile.GNU_FORMAT) as tar:
             # We want to add dirs and files that are NOT DEBIAN or .temp_deb
             # And structure them relative to build_dir, e.g. ./usr/bin/...
             

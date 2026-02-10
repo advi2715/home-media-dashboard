@@ -10,6 +10,8 @@ def fetch_sonarr_data():
     if not base_url or not api_key:
         return {'error': 'Sonarr not configured'}
 
+    base_url = base_url.rstrip('/')
+
     headers = {
         'X-Api-Key': api_key,
         'Accept': 'application/json'
@@ -19,7 +21,10 @@ def fetch_sonarr_data():
         # System Status (Health)
         health_req = urllib.request.Request(f"{base_url}/api/v3/health", headers=headers)
         with urllib.request.urlopen(health_req, timeout=5) as response:
-            health_data = json.loads(response.read().decode('utf-8'))
+            try:
+                health_data = json.loads(response.read().decode('utf-8'))
+            except json.JSONDecodeError:
+                return {'error': 'Sonarr: Invalid JSON response. Check URL.'}
         
         errors = [h for h in health_data if h.get('type') == 'error']
         warnings = [h for h in health_data if h.get('type') == 'warning']
@@ -27,7 +32,10 @@ def fetch_sonarr_data():
         # Queue
         queue_req = urllib.request.Request(f"{base_url}/api/v3/queue", headers=headers)
         with urllib.request.urlopen(queue_req, timeout=5) as response:
-            queue_data = json.loads(response.read().decode('utf-8'))
+            try:
+                queue_data = json.loads(response.read().decode('utf-8'))
+            except json.JSONDecodeError:
+                return {'error': 'Sonarr: Invalid JSON response from Queue endpoint.'}
         
         records = queue_data.get('records', [])
         activity = []
