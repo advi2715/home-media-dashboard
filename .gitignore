@@ -7,3 +7,10 @@ build/
 dist/
 __pycache__/
 *.spec
+
+# Arch build artifacts
+packaging/arch/pkg/
+packaging/arch/src/
+packaging/arch/execution/
+packaging/arch/media-dashboard/
+*.pkg.tar.zst
