@@ -1,6 +1,6 @@
 # Maintainer: Greg <greg@example.com>
 pkgname=media-dashboard
-pkgver=1.1.10
+pkgver=1.1.11
 pkgrel=1
 pkgdesc="Home Media Dashboard (Universal)"
 arch=('any')

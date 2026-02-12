@@ -1,5 +1,5 @@
 Package: media-dashboard
-Version: 1.1.2
+Version: 1.1.11
 Section: utils
 Priority: optional
 Architecture: amd64
