@@ -19,3 +19,4 @@ packaging/arch/media-dashboard/
 directives/
 walkthrough.md
 .vscode/
+.worktrees/
