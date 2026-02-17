@@ -71,6 +71,28 @@ OVERSEERR_URL=http://localhost:5055
 OVERSEERR_API_KEY=your_overseerr_api_key
 ```
 
+## How to Obtain API Keys
+
+### Plex Token (`PLEX_TOKEN`)
+1.  Sign in to Plex.tv in your browser.
+2.  Click on any media item (movie or episode).
+3.  Click the three dots **(...)** menu > **Get Info**.
+4.  Click **View XML**.
+5.  A new tab will open with XML data. Look at the URL bar.
+6.  The token is the string after `X-Plex-Token=`.
+    - Example: `...&X-Plex-Token=abc123xyz...` -> Application Token is `abc123xyz`.
+
+### Sonarr / Radarr / Overseerr API Key
+1.  Open the application in your browser.
+2.  Go to **Settings** > **General**.
+3.  Scroll down to the **Security** (or API) section.
+4.  Copy the **API Key**.
+
+### Qbittorrent Credentials
+-   **Username**: Default is `admin`.
+-   **Password**: Default is `adminadmin`.
+-   **Note**: If you have "Bypass authentication for clients on localhost" checked in Qbittorrent settings, you may still need to provide credentials in the `.env` file, or ensure the dashboard is running on the same machine.
+
 ## Starting the Service
 
 Enable and start the user service:
