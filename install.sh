@@ -17,7 +17,7 @@ SERVICE_FILE="/usr/lib/systemd/user/media-dashboard.service"
 CONFIG_DIR="${HOME}/.config/media-dashboard"
 CONFIG_FILE="${CONFIG_DIR}/env"
 VERSION_FILE="${INSTALL_DIR}/version.txt"
-GITHUB_REPO="asdghsas35/home-media-dashboard"
+GITHUB_REPO="advi2715/home-media-dashboard"
 
 # ── Colors & Output ─────────────────────────────────────────────────────────
 RED='\033[0;31m'

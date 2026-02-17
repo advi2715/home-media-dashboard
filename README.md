@@ -7,12 +7,12 @@ A lightweight dashboard for monitoring your home media stack (Plex, Qbittorrent,
 ### Quick Install (Recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/asdghsas35/home-media-dashboard/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/advi2715/home-media-dashboard/main/install.sh | bash
 ```
 
 ### Manual Install
 
-1. Download the latest release from [Releases](https://github.com/asdghsas35/home-media-dashboard/releases)
+1. Download the latest release from [Releases](https://github.com/advi2715/home-media-dashboard/releases)
 2. Extract and run:
    ```bash
    tar xzf media-dashboard-*.tar.gz
@@ -27,7 +27,7 @@ If you previously installed via `.deb` or Arch package, the installer will detec
 ### Uninstalling
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/asdghsas35/home-media-dashboard/main/install.sh | bash -s -- --uninstall
+curl -fsSL https://raw.githubusercontent.com/advi2715/home-media-dashboard/main/install.sh | bash -s -- --uninstall
 ```
 
 Or if you have the script locally:
