@@ -1,9 +1,0 @@
-#!/bin/bash
-set -e
-
-# Reload systemd user daemon if possible, but since we don't know which user, we might invoke
-# systemctl --global daemon-reload if available, or just leave it to the user.
-# Usually packaged user units are picked up automatically or on next login.
-
-# We don't need to do much here for a user service.
-exit 0

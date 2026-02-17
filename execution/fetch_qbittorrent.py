@@ -1,11 +1,10 @@
-import urllib.request
+import aiohttp
+import asyncio
 import urllib.parse
-import urllib.error
-import http.cookiejar
 import json
 import os
 
-def fetch_qbittorrent_data():
+async def fetch_qbittorrent_data(session):
     base_url = os.getenv('QBITTORRENT_URL')
     username = os.getenv('QBITTORRENT_USERNAME')
     password = os.getenv('QBITTORRENT_PASSWORD')
@@ -14,37 +13,38 @@ def fetch_qbittorrent_data():
         return {'error': 'Qbittorrent URL not configured'}
 
     base_url = base_url.rstrip('/')
-
-    # Setup Cookie Jar for authentication
-    cj = http.cookiejar.CookieJar()
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
     
-    # Headers - qBittorrent sometimes likes a User-Agent, though not strictly required
-    opener.addheaders = [('User-Agent', 'MediaDashboard/1.0')]
+    # We use the shared session, but qBittorrent needs cookies for auth.
+    # aiohttp ClientSession handles cookies automatically if we reuse it.
+    # However, if 'session' is shared across different services (Plex, Sonarr), 
+    # we need to ensure we don't leak cookies or conflicts?
+    # Actually, aiohttp session cookie jar is shared. qBit sets a cookie 'SID'. 
+    # It shouldn't conflict with others usually (Plex uses headers, Arrs use headers).
+    # BUT, if we want to be safe or if the passed session doesn't persist cookies correctly for this flow:
+    # We might want to just login every time or rely on the session.
+    # Let's assume the passed 'session' is a fresh one specific to the request or a global one.
+    # If it's a global one, we should be fine. If it's per-request, we login once.
+    
+    headers = {'User-Agent': 'MediaDashboard/1.0'}
 
     try:
         # 1. Login
         if username and password:
-            login_data = urllib.parse.urlencode({'username': username, 'password': password}).encode('utf-8')
-            # Login is a POST request
-            # qBittorrent returns 200 OK with "Ok." body on success, or 200 OK with "Fails." on failure (older versions)
-            # or just sets the cookie.
-            try:
-                with opener.open(f"{base_url}/api/v2/auth/login", data=login_data, timeout=5) as login_resp:
-                    login_text = login_resp.read().decode('utf-8')
-                    if "Fails." in login_text: # Some versions return "Fails." text
-                        return {'error': 'Qbittorrent Login Failed'}
-            except urllib.error.HTTPError as e:
-                 # If 401/403
-                 return {'error': f"Login HTTP Error: {e.code}"}
+            login_data = {'username': username, 'password': password}
+            # Login
+            async with session.post(f"{base_url}/api/v2/auth/login", data=login_data, headers=headers, timeout=5) as login_resp:
+                if login_resp.status != 200:
+                     return {'error': f'Qbittorrent Login HTTP {login_resp.status}'}
+                text = await login_resp.text()
+                if "Fails." in text:
+                    return {'error': 'Qbittorrent Login Failed'}
 
         # 2. Get Torrents
-        # API: /api/v2/torrents/info
-        torrents_url = f"{base_url}/api/v2/torrents/info?sort=added_on&reverse=true&limit=20"
-        with opener.open(torrents_url, timeout=5) as resp:
-            torrents = json.loads(resp.read().decode('utf-8'))
+        async with session.get(f"{base_url}/api/v2/torrents/info?sort=added_on&reverse=true&limit=20", headers=headers, timeout=5) as resp:
+            if resp.status != 200:
+                return {'error': f'Qbittorrent Info HTTP {resp.status}'}
+            torrents = await resp.json()
         
-        # Status mapping
         status_map = {
             'error': 'Error',
             'missingFiles': 'Missing Files',
@@ -70,11 +70,7 @@ def fetch_qbittorrent_data():
         for torrent in torrents:
             state = torrent.get('state', 'unknown')
             readable_state = status_map.get(state, state)
-            
-            # dlspeed is bytes/s
             dlspeed = torrent.get('dlspeed', 0)
-            
-            # progress is 0-1
             progress = torrent.get('progress', 0) * 100
             
             recent_downloads.append({
@@ -85,69 +81,57 @@ def fetch_qbittorrent_data():
             })
 
         # 3. Get Error Count
-        # We limit the fetch to avoid memory issues (fixed previously), and now use urllib
         error_limit = 500
-        error_url = f"{base_url}/api/v2/torrents/info?filter=error&limit={error_limit}"
-        
         errored_torrents = []
         try:
-            with opener.open(error_url, timeout=5) as error_resp:
-                 errors_data = json.loads(error_resp.read().decode('utf-8'))
-            
-            for i, err in enumerate(errors_data):
-                error_msg = 'Unknown Error'
-                t_hash = err.get('hash')
-                
-                # Fetch trackers for this error to find the message
-                # This could be slow for many errors, but we rely on the limit=500 and user pattern
-                if t_hash:
-                    try:
-                        trackers_url = f"{base_url}/api/v2/torrents/trackers?hash={t_hash}"
-                        with opener.open(trackers_url, timeout=5) as trackers_resp:
-                            trackers = json.loads(trackers_resp.read().decode('utf-8'))
-                            # Find first tracker with message
-                            for tracker in trackers:
-                                msg = tracker.get('msg', '')
-                                # Ignore common non-error messages or informational flags
-                                if not msg or "this torrent is private" in msg.lower() or msg.lower() == "ok":
-                                    continue
-                                
-                                error_msg = msg
-                                break
-                    except Exception:
-                        pass # Ignore tracker fetch failures
-                
-                # If the error message was ignored (still 'Unknown Error') and the state is not a hard error state, 
-                # assume it's a false positive from filter=error (e.g. tracker warning on private torrent)
-                # Hard error states: error, missingFiles
-                state = err.get('state', 'unknown')
-                if error_msg == 'Unknown Error' and state not in ['error', 'missingFiles', 'metaDL']:
-                    continue
+            async with session.get(f"{base_url}/api/v2/torrents/info?filter=error&limit={error_limit}", headers=headers, timeout=5) as error_resp:
+                 if error_resp.status == 200:
+                    errors_data = await error_resp.json()
+                    
+                    for err in errors_data:
+                        error_msg = 'Unknown Error'
+                        t_hash = err.get('hash')
+                        
+                        if t_hash:
+                            try:
+                                async with session.get(f"{base_url}/api/v2/torrents/trackers?hash={t_hash}", headers=headers, timeout=5) as trackers_resp:
+                                    if trackers_resp.status == 200:
+                                        trackers = await trackers_resp.json()
+                                        for tracker in trackers:
+                                            msg = tracker.get('msg', '')
+                                            if not msg or "this torrent is private" in msg.lower() or msg.lower() == "ok":
+                                                continue
+                                            error_msg = msg
+                                            break
+                            except Exception:
+                                pass 
+                        
+                        state = err.get('state', 'unknown')
+                        if error_msg == 'Unknown Error' and state not in ['error', 'missingFiles', 'metaDL']:
+                            continue
 
-                errored_torrents.append({
-                    'name': err.get('name'),
-                    'hash': err.get('hash'),
-                    'state': state,
-                    'message': error_msg
-                })
-        
+                        errored_torrents.append({
+                            'name': err.get('name'),
+                            'hash': err.get('hash'),
+                            'state': state,
+                            'message': error_msg
+                        })
         except Exception:
             pass
 
         # 4. Get Global Transfer Info
-        # API: /api/v2/transfer/info
         transfer_info = {}
         try:
-            with opener.open(f"{base_url}/api/v2/transfer/info", timeout=5) as transfer_resp:
-                t_data = json.loads(transfer_resp.read().decode('utf-8'))
-                transfer_info = {
-                    'dl_info_data': t_data.get('dl_info_data', 0),
-                    'up_info_data': t_data.get('up_info_data', 0),
-                    'dl_info_speed': t_data.get('dl_info_speed', 0),
-                    'up_info_speed': t_data.get('up_info_speed', 0)
-                }
+            async with session.get(f"{base_url}/api/v2/transfer/info", headers=headers, timeout=5) as transfer_resp:
+                if transfer_resp.status == 200:
+                    t_data = await transfer_resp.json()
+                    transfer_info = {
+                        'dl_info_data': t_data.get('dl_info_data', 0),
+                        'up_info_data': t_data.get('up_info_data', 0),
+                        'dl_info_speed': t_data.get('dl_info_speed', 0),
+                        'up_info_speed': t_data.get('up_info_speed', 0)
+                    }
         except Exception:
-             # If this fails, we just don't show the global stats, not critical enough to fail everything
             pass
 
         return {
@@ -158,10 +142,14 @@ def fetch_qbittorrent_data():
             'transfer_info': transfer_info
         }
 
+    except asyncio.TimeoutError:
+         return {'error': 'Qbittorrent Connection Timeout'}
+    except aiohttp.ClientError as e:
+         return {'error': f'Qbittorrent Connection Error: {str(e)}'}
     except Exception as e:
         return {'error': str(e)}
 
-def delete_torrent(torrent_hash, delete_files=False):
+async def delete_torrent(session, torrent_hash, delete_files=False):
     base_url = os.getenv('QBITTORRENT_URL')
     username = os.getenv('QBITTORRENT_USERNAME')
     password = os.getenv('QBITTORRENT_PASSWORD')
@@ -170,34 +158,27 @@ def delete_torrent(torrent_hash, delete_files=False):
         return {'error': 'Qbittorrent URL not configured'}
 
     base_url = base_url.rstrip('/')
-
-    # Setup Cookie Jar
-    cj = http.cookiejar.CookieJar()
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-    opener.addheaders = [('User-Agent', 'MediaDashboard/1.0')]
+    headers = {'User-Agent': 'MediaDashboard/1.0'}
     
     try:
-        # Login
+        # Login (if session not already authenticated - strictly we should ensure auth)
         if username and password:
-            login_data = urllib.parse.urlencode({'username': username, 'password': password}).encode('utf-8')
-            with opener.open(f"{base_url}/api/v2/auth/login", data=login_data, timeout=5) as login_resp:
-                login_text = login_resp.read().decode('utf-8')
-                if "Fails." in login_text:
-                    return {'error': 'Qbittorrent login failed'}
+             login_data = {'username': username, 'password': password}
+             async with session.post(f"{base_url}/api/v2/auth/login", data=login_data, headers=headers, timeout=5) as login_resp:
+                if login_resp.status != 200:
+                      return {'error': 'Qbittorrent login failed'}
 
-        # Delete torrent
-        delete_url = f"{base_url}/api/v2/torrents/delete"
-        post_data = urllib.parse.urlencode({
+        # Delete
+        post_data = {
             'hashes': torrent_hash,
             'deleteFiles': 'true' if delete_files else 'false'
-        }).encode('utf-8')
+        }
         
-        with opener.open(delete_url, data=post_data, timeout=5) as resp:
-            pass
+        async with session.post(f"{base_url}/api/v2/torrents/delete", data=post_data, headers=headers, timeout=5) as resp:
+             if resp.status != 200:
+                 return {'error': f'Delete failed with HTTP {resp.status}'}
         
         return {'success': True}
 
-    except urllib.error.HTTPError as e:
-        return {'error': f'Qbittorrent HTTP {e.code}: {e.reason}'}
     except Exception as e:
         return {'error': str(e)}

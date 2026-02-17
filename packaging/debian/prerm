@@ -1,5 +1,0 @@
-#!/bin/bash
-set -e
-
-# We cannot easily stop user services for all users from here.
-exit 0

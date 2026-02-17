@@ -1,9 +1,9 @@
-import urllib.request
-import urllib.error
+import aiohttp
+import asyncio
 import json
 import os
 
-def fetch_radarr_data():
+async def fetch_radarr_data(session):
     base_url = os.getenv('RADARR_URL')
     api_key = os.getenv('RADARR_API_KEY')
     
@@ -19,23 +19,19 @@ def fetch_radarr_data():
     
     try:
         # System Status (Health)
-        health_req = urllib.request.Request(f"{base_url}/api/v3/health", headers=headers)
-        with urllib.request.urlopen(health_req, timeout=5) as response:
-            try:
-                health_data = json.loads(response.read().decode('utf-8'))
-            except json.JSONDecodeError:
-                return {'error': 'Radarr: Invalid JSON response. Check URL.'}
+        async with session.get(f"{base_url}/api/v3/health", headers=headers, timeout=5) as health_resp:
+            if health_resp.status != 200:
+                return {'error': f'Radarr Health HTTP {health_resp.status}'}
+            health_data = await health_resp.json()
         
         errors = [h for h in health_data if h.get('type') == 'error']
         warnings = [h for h in health_data if h.get('type') == 'warning']
         
         # Queue
-        queue_req = urllib.request.Request(f"{base_url}/api/v3/queue", headers=headers)
-        with urllib.request.urlopen(queue_req, timeout=5) as response:
-            try:
-                queue_data = json.loads(response.read().decode('utf-8'))
-            except json.JSONDecodeError:
-                return {'error': 'Radarr: Invalid JSON response from Queue endpoint.'}
+        async with session.get(f"{base_url}/api/v3/queue", headers=headers, timeout=5) as queue_resp:
+             if queue_resp.status != 200:
+                return {'error': f'Radarr Queue HTTP {queue_resp.status}'}
+             queue_data = await queue_resp.json()
         
         records = queue_data.get('records', [])
         activity = []
@@ -52,5 +48,9 @@ def fetch_radarr_data():
             'activity': activity
         }
         
+    except asyncio.TimeoutError:
+         return {'error': 'Radarr Connection Timeout'}
+    except aiohttp.ClientError as e:
+         return {'error': f'Radarr Connection Error: {str(e)}'}
     except Exception as e:
         return {'error': str(e)}

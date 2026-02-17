@@ -1,9 +1,0 @@
-Package: media-dashboard
-Version: 1.1.11
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: Greg <greg@example.com>
-Depends: libc6, libstdc++6
-Description: Home Media Dashboard
- a dashboard for Plex, Sonarr, Radarr, and Qbittorrent.

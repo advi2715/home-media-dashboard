@@ -1,11 +1,11 @@
-import urllib.request
-import urllib.error
+import aiohttp
+import asyncio
 import urllib.parse
 import json
 import os
 import traceback
 
-def fetch_plex_data():
+async def fetch_plex_data(session):
     plex_url = os.getenv('PLEX_URL')
     plex_token = os.getenv('PLEX_TOKEN')
     
@@ -18,7 +18,7 @@ def fetch_plex_data():
         'Accept': 'application/json'
     }
     
-    def get_recent_items(lib_type, limit=5):
+    async def get_recent_items(lib_type, limit=5):
         # type 1 = Movie, type 4 = Episode
         params = urllib.parse.urlencode({
             'type': lib_type,
@@ -29,9 +29,10 @@ def fetch_plex_data():
         
         try:
             url = f"{plex_url}/library/all?{params}"
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=10) as response:
-                data = json.loads(response.read().decode('utf-8'))
+            async with session.get(url, headers=headers, timeout=10) as response:
+                if response.status != 200:
+                     return {'error': f'Plex HTTP {response.status}'}
+                data = await response.json()
             
             items = []
             if 'MediaContainer' in data and 'Metadata' in data['MediaContainer']:
@@ -44,10 +45,13 @@ def fetch_plex_data():
                         if grandparent:
                             title = f"{grandparent}" 
                         
+                        # Use series poster (grandparentThumb) if available, else fallback to episode thumb
+                        thumb_path = item.get('grandparentThumb') or item.get('thumb')
+                        
                         items.append({
                             'title': title,
                             'episode': item.get('title'), # Episode name
-                            'thumb': f"{plex_url}{item.get('thumb')}?X-Plex-Token={plex_token}" if item.get('thumb') else None
+                            'thumb': f"{plex_url}{thumb_path}?X-Plex-Token={plex_token}" if thumb_path else None
                         })
                     else:
                         items.append({
@@ -56,21 +60,21 @@ def fetch_plex_data():
                             'thumb': f"{plex_url}{item.get('thumb')}?X-Plex-Token={plex_token}" if item.get('thumb') else None
                         })
             return items
-        except urllib.error.HTTPError as e:
-            return {'error': f'Plex HTTP Error {e.code}: Check PLEX_URL and PLEX_TOKEN'}
-        except urllib.error.URLError as e:
-            return {'error': f'Plex Connection Error: {e.reason} - Is PLEX_URL reachable from this machine?'}
-        except json.JSONDecodeError:
-            return {'error': 'Plex: Invalid JSON response. Check PLEX_URL.'}
+        except asyncio.TimeoutError:
+            return {'error': 'Plex Connection Timeout'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Plex Connection Error: {str(e)}'}
         except Exception as e:
             return {'error': f'Plex: {str(e)}'}
 
-    def get_latest_session():
+    async def get_latest_session():
         try:
             url = f"{plex_url}/status/sessions"
-            req = urllib.request.Request(url, headers={'X-Plex-Token': plex_token, 'Accept': 'application/json'})
-            with urllib.request.urlopen(req, timeout=5) as response:
-                data = json.loads(response.read().decode('utf-8'))
+            req_headers = {**headers, 'X-Plex-Token': plex_token}
+            async with session.get(url, headers=req_headers, timeout=5) as response:
+                 if response.status != 200:
+                     return []
+                 data = await response.json()
             
             if 'MediaContainer' in data and data['MediaContainer'].get('size', 0) > 0:
                 sessions = []
@@ -79,7 +83,7 @@ def fetch_plex_data():
                     user = item.get('User', {}).get('title', 'Unknown User')
                     user_thumb = item.get('User', {}).get('thumb')
                     if user_thumb:
-                        user_thumb = f"{user_thumb}?X-Plex-Token={plex_token}" # It's usually a full URL but might need token if internal
+                        user_thumb = f"{user_thumb}?X-Plex-Token={plex_token}" 
                     
                     title = item.get('title')
                     # If episode
@@ -102,23 +106,28 @@ def fetch_plex_data():
                     })
                 return sessions
             return []
-        except urllib.error.URLError:
-            return []
         except Exception:
             return []
 
     try:
-        recent_movies = get_recent_items(1)
-        # If movies fetch returned an error, bubble it up
+        # We can run these in parallel too if we wanted, but for now sequential inside the plex fetch is fine
+        # explicitly enabling parallel here too
+        results = await asyncio.gather(
+            get_recent_items(1),
+            get_recent_items(4),
+            get_latest_session(),
+            return_exceptions=True
+        )
+
+        recent_movies = results[0] if not isinstance(results[0], Exception) else {'error': str(results[0])}
+        recent_shows = results[1] if not isinstance(results[1], Exception) else {'error': str(results[1])}
+        active_sessions = results[2] if not isinstance(results[2], Exception) else []
+
+        # Error bubbling remains similar logic
         if isinstance(recent_movies, dict) and 'error' in recent_movies:
-            return recent_movies
+             # Just return it to show the error on the card
+             pass 
 
-        recent_shows = get_recent_items(4)
-        if isinstance(recent_shows, dict) and 'error' in recent_shows:
-            return recent_shows
-
-        active_sessions = get_latest_session()
-        
         return {
             'movies': recent_movies,
             'shows': recent_shows,

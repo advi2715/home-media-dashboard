@@ -1,10 +1,10 @@
-import urllib.request
-import urllib.error
+import aiohttp
+import asyncio
 import json
 import os
 from datetime import datetime
 
-def fetch_overseerr_data():
+async def fetch_overseerr_data(session):
     base_url = os.getenv('OVERSEERR_URL')
     api_key = os.getenv('OVERSEERR_API_KEY')
     
@@ -20,13 +20,10 @@ def fetch_overseerr_data():
     
     try:
         # Fetch requests
-        req = urllib.request.Request(f"{base_url}/api/v1/request?take=50&sort=added&skip=0", headers=headers)
-        
-        with urllib.request.urlopen(req, timeout=10) as response:
-            try:
-                data = json.loads(response.read().decode('utf-8'))
-            except json.JSONDecodeError:
-                return {'error': 'Overseerr: Invalid JSON response.'}
+        async with session.get(f"{base_url}/api/v1/request?take=50&sort=added&skip=0", headers=headers, timeout=2) as response:
+             if response.status != 200:
+                 return {'error': f'Overseerr HTTP {response.status}'}
+             data = await response.json()
         
         results = data.get('results', [])
         pending_requests = []
@@ -70,19 +67,19 @@ def fetch_overseerr_data():
                         # Fetch details from Overseerr (which proxies/caches TMDB)
                         # Ensure request_type matches endpoint expectation (movie/tv)
                         detail_url = f"{base_url}/api/v1/{request_type}/{tmdb_id}"
-                        req_d = urllib.request.Request(detail_url, headers=headers)
-                        with urllib.request.urlopen(req_d, timeout=3) as resp_d:
-                            details = json.loads(resp_d.read().decode('utf-8'))
-                            
-                            # Update title
-                            if 'title' in details:
-                                title = details['title']
-                            elif 'name' in details:
-                                title = details['name']
+                        async with session.get(detail_url, headers=headers, timeout=3) as resp_d:
+                            if resp_d.status == 200:
+                                details = await resp_d.json()
                                 
-                            # Update poster if missing
-                            if not poster_path and 'posterPath' in details:
-                                poster_path = details['posterPath']
+                                # Update title
+                                if 'title' in details:
+                                    title = details['title']
+                                elif 'name' in details:
+                                    title = details['name']
+                                    
+                                # Update poster if missing
+                                if not poster_path and 'posterPath' in details:
+                                    poster_path = details['posterPath']
                     except Exception as e:
                         # Fail silently on details fetch to avoid breaking the dashboard
                         print(f"Overseerr detail fetch failed for {tmdb_id}: {e}")
@@ -107,5 +104,9 @@ def fetch_overseerr_data():
             'count': len(pending_requests)
         }
         
+    except asyncio.TimeoutError:
+         return {'error': 'Overseerr Connection Timeout'}
+    except aiohttp.ClientError as e:
+         return {'error': f'Overseerr Connection Error: {str(e)}'}
     except Exception as e:
         return {'error': str(e)}

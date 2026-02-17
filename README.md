@@ -4,68 +4,72 @@ A lightweight dashboard for monitoring your home media stack (Plex, Qbittorrent,
 
 ## Installation
 
-### Arch Linux
-1.  Download the universal package (`any`):
-    ```bash
-    wget https://github.com/asdghsas35/home-media-dashboard/releases/download/v1.1.10/media-dashboard-1.1.10-1-any.pkg.tar.zst
-    ```
-2.  Install the package using `pacman`:
-    ```bash
-    sudo pacman -U media-dashboard-1.1.10-1-any.pkg.tar.zst
-    ```
+### Quick Install (Recommended)
 
-### Debian / Ubuntu (including Raspberry Pi)
-1.  Download the universal package (`all`):
-    ```bash
-    wget https://github.com/asdghsas35/home-media-dashboard/releases/download/v1.1.10/media-dashboard_1.1.10_all.deb
-    ```
-2.  Install the package using `apt` (this automatically handles dependencies):
-    ```bash
-    sudo apt install ./media-dashboard_1.1.10_all.deb
-    ```
-    *Note: If you already ran `dpkg -i` and got errors, run `sudo apt-get install -f` to fix missing dependencies.*
+```bash
+curl -fsSL https://raw.githubusercontent.com/asdghsas35/home-media-dashboard/main/install.sh | bash
+```
+
+### Manual Install
+
+1. Download the latest release from [Releases](https://github.com/asdghsas35/home-media-dashboard/releases)
+2. Extract and run:
+   ```bash
+   tar xzf media-dashboard-*.tar.gz
+   cd media-dashboard-*/
+   bash install.sh
+   ```
+
+### Upgrading from .deb or Arch Package
+
+If you previously installed via `.deb` or Arch package, the installer will detect and offer to remove the old package automatically. Your configuration is preserved.
+
+### Uninstalling
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/asdghsas35/home-media-dashboard/main/install.sh | bash -s -- --uninstall
+```
+
+Or if you have the script locally:
+```bash
+bash install.sh --uninstall
+```
 
 ## Configuration
 
-The service runs as a user service and loads configuration from `~/.config/media-dashboard/env`.
+The service loads configuration from `~/.config/media-dashboard/env`.
 
-1.  Create the configuration directory:
-    ```bash
-    mkdir -p ~/.config/media-dashboard
-    ```
+The installer creates a config template automatically. Edit it with your details:
 
-2.  Create the environment file:
-    ```bash
-    nano ~/.config/media-dashboard/env
-    ```
+```bash
+nano ~/.config/media-dashboard/env
+```
 
-3.  Paste the following configuration and update with your details:
+```bash
+# Server Configuration
+PORT=7152
 
-    ```bash
-    # Server Configuration
-    PORT=7152
+# Plex
+PLEX_URL=http://localhost:32400
+PLEX_TOKEN=your_plex_token_here
 
-    # Plex
-    PLEX_URL=http://localhost:32400
-    PLEX_TOKEN=your_plex_token_here
+# Qbittorrent
+QBITTORRENT_URL=http://localhost:8080
+QBITTORRENT_USERNAME=admin
+QBITTORRENT_PASSWORD=adminadmin
 
-    # Qbittorrent
-    QBITTORRENT_URL=http://localhost:8080
-    QBITTORRENT_USERNAME=admin
-    QBITTORRENT_PASSWORD=adminadmin
+# Sonarr
+SONARR_URL=http://localhost:8989
+SONARR_API_KEY=your_sonarr_api_key
 
-    # Sonarr
-    SONARR_URL=http://localhost:8989
-    SONARR_API_KEY=your_sonarr_api_key
+# Radarr
+RADARR_URL=http://localhost:7878
+RADARR_API_KEY=your_radarr_api_key
 
-    # Radarr
-    RADARR_URL=http://localhost:7878
-    RADARR_API_KEY=your_radarr_api_key
-
-    # Overseerr
-    OVERSEERR_URL=http://localhost:5055
-    OVERSEERR_API_KEY=your_overseerr_api_key
-    ```
+# Overseerr
+OVERSEERR_URL=http://localhost:5055
+OVERSEERR_API_KEY=your_overseerr_api_key
+```
 
 ## Starting the Service
 
@@ -81,7 +85,7 @@ Check the status:
 systemctl --user status media-dashboard
 ```
 
-Run the logs:
+View logs:
 ```bash
 journalctl --user -u media-dashboard -f
 ```
@@ -93,6 +97,6 @@ Open your browser and navigate to:
 
 ## Troubleshooting
 
--   **Service fails to start:** Check logs (`journalctl --user -u media-dashboard`).
--   **"Qbittorrent URL not configured":** Ensure `~/.config/media-dashboard/env` exists and is populated correctly.
--   **Memory Issues:** This version includes a fix for high-volume Qbittorrent error fetching. If you experience crashes, please report with logs.
+-   **Service fails to start:** Check logs (`journalctl --user -u media-dashboard`)
+-   **"URL not configured":** Ensure `~/.config/media-dashboard/env` exists and is populated correctly
+-   **After update:** Restart the service (`systemctl --user restart media-dashboard`)
