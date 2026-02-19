@@ -59,7 +59,7 @@ export default function Dashboard() {
 
         {/* Overseerr Widget */}
         <Card className="shrink-0 bg-indigo-950/20 border-indigo-900/30" noPadding>
-          <div className="p-4 flex items-center gap-4">
+          <a href={data.urls.overseerr} target="_blank" rel="noopener noreferrer" className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors block">
             <div className="text-3xl font-bold text-indigo-400">{data.overseerr.count || 0}</div>
             <div className="flex-1">
               <div className="text-xs font-bold uppercase tracking-wider text-indigo-300/70">Requests</div>
@@ -67,11 +67,11 @@ export default function Dashboard() {
                 {(data.overseerr.requests || []).slice(0, 1).map(r => r.title).join(', ') || 'No pending requests'}
               </div>
             </div>
-          </div>
+          </a>
         </Card>
 
         {/* Sonarr (TV) */}
-        <Card title="Sonarr" className="flex-1">
+        <Card title="Sonarr" href={data.urls.sonarr} className="flex-1">
           <div className="space-y-2">
             {(data.sonarr.activity || []).length === 0 && <span className="text-slate-600 text-xs italic">Queue empty</span>}
             {(data.sonarr.activity || []).map((item, i) => (
@@ -84,7 +84,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Radarr (Movies) */}
-        <Card title="Radarr" className="flex-1">
+        <Card title="Radarr" href={data.urls.radarr} className="flex-1">
           <div className="space-y-2">
             {(data.radarr.activity || []).length === 0 && <span className="text-slate-600 text-xs italic">Queue empty</span>}
             {(data.radarr.activity || []).map((item, i) => (
@@ -98,7 +98,7 @@ export default function Dashboard() {
       </div>
 
       {/* 2. Plex (Center, Main Focus) */}
-      <Card className="col-span-1 md:col-span-1 xl:row-span-2 overflow-hidden border-blue-900/20" noPadding>
+      <Card title="Plex" href={data.urls.plex} className="col-span-1 md:col-span-1 xl:row-span-2 overflow-hidden border-blue-900/20" noPadding>
         {/* Hero: Active Session or Latest Movie */}
         {(data.plex.active_sessions || []).length > 0 ? (
           <PlexShelf title="" items={data.plex.active_sessions} type="session" variant="hero" />
@@ -116,7 +116,7 @@ export default function Dashboard() {
       </Card>
 
       {/* 3. Downloads (Right Column) */}
-      <Card className="flex flex-col border-emerald-900/20" noPadding>
+      <Card title="Qbittorrent" href={data.urls.qbittorrent} className="flex flex-col border-emerald-900/20" noPadding>
         {/* Speed Header */}
         <div className="p-5 bg-slate-900/50 border-b border-white/5 grid grid-cols-2 gap-4">
           <div>

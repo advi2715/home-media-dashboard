@@ -66,12 +66,21 @@ async def get_data():
         else:
             data.append(res)
             
+    urls = {
+        'plex': os.getenv('PLEX_URL', 'http://localhost:32400'),
+        'qbittorrent': os.getenv('QBITTORRENT_URL', 'http://localhost:8080'),
+        'sonarr': os.getenv('SONARR_URL', 'http://localhost:8989'),
+        'radarr': os.getenv('RADARR_URL', 'http://localhost:7878'),
+        'overseerr': os.getenv('OVERSEERR_URL', 'http://localhost:5055')
+    }
+
     return jsonify({
         'plex': data[0],
         'qbittorrent': data[1],
         'sonarr': data[2],
         'radarr': data[3],
-        'overseerr': data[4]
+        'overseerr': data[4],
+        'urls': urls
     })
 
 @app.route('/api/delete_torrent', methods=['POST'])

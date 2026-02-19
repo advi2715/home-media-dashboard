@@ -75,6 +75,13 @@ export interface DashboardData {
     sonarr: ArrData;
     radarr: ArrData;
     overseerr: OverseerrData;
+    urls: {
+        plex: string;
+        qbittorrent: string;
+        sonarr: string;
+        radarr: string;
+        overseerr: string;
+    };
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
