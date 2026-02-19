@@ -70,7 +70,12 @@ check_existing_packages() {
         if dpkg -l "$APP_NAME" 2>/dev/null | grep -q "^ii"; then
             warn "Found existing .deb package '${APP_NAME}' installed."
             echo ""
-            read -rp "  Remove the old .deb package before continuing? [Y/n] " reply < /dev/tty
+            if [ -r /dev/tty ]; then
+                read -rp "  Remove the old .deb package before continuing? [Y/n] " reply < /dev/tty
+            else
+                warn "No interactive terminal found. Defaulting to 'Yes' for package removal."
+                reply="Y"
+            fi
             reply=${reply:-Y}
             if [[ "$reply" =~ ^[Yy]$ ]]; then
                 info "Removing .deb package..."
@@ -88,7 +93,12 @@ check_existing_packages() {
         if pacman -Q "$APP_NAME" 2>/dev/null; then
             warn "Found existing Arch package '${APP_NAME}' installed."
             echo ""
-            read -rp "  Remove the old Arch package before continuing? [Y/n] " reply < /dev/tty
+            if [ -r /dev/tty ]; then
+                read -rp "  Remove the old Arch package before continuing? [Y/n] " reply < /dev/tty
+            else
+                warn "No interactive terminal found. Defaulting to 'Yes' for package removal."
+                reply="Y"
+            fi
             reply=${reply:-Y}
             if [[ "$reply" =~ ^[Yy]$ ]]; then
                 info "Removing Arch package..."
