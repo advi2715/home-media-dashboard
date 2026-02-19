@@ -79,7 +79,7 @@ check_existing_packages() {
             reply=${reply:-Y}
             if [[ "$reply" =~ ^[Yy]$ ]]; then
                 info "Removing .deb package..."
-                sudo apt remove -y "$APP_NAME" 2>/dev/null || true
+                sudo env DEBIAN_FRONTEND=noninteractive apt-get remove -y "$APP_NAME" 2>/dev/null || true
                 success "Old .deb package removed."
             else
                 warn "Keeping old .deb package. This may cause conflicts."
@@ -120,8 +120,8 @@ install_system_deps() {
         debian)
             if ! command -v python3 &>/dev/null || ! python3 -m venv --help &>/dev/null 2>&1; then
                 info "Installing Python 3 and venv..."
-                sudo apt update -qq
-                sudo apt install -y -qq python3 python3-venv python3-pip
+                sudo apt-get update -qq || warn "apt-get update failed, continuing..."
+                sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-pip
             else
                 success "Python 3 and venv already installed."
             fi
