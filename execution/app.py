@@ -25,7 +25,9 @@ app.client_session = None
 
 @app.before_serving
 async def startup():
-    app.client_session = aiohttp.ClientSession()
+    app.client_session = aiohttp.ClientSession(
+        cookie_jar=aiohttp.CookieJar(unsafe=True)
+    )
 
 @app.after_serving
 async def shutdown():

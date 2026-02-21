@@ -131,8 +131,10 @@ async def fetch_qbittorrent_data(session):
                         'dl_info_speed': t_data.get('dl_info_speed', 0),
                         'up_info_speed': t_data.get('up_info_speed', 0)
                     }
-        except Exception:
-            pass
+                else:
+                    print(f"[qbit] transfer/info returned HTTP {transfer_resp.status}")
+        except Exception as e:
+            print(f"[qbit] transfer/info failed: {e}")
 
         return {
             'recent': recent_downloads,
